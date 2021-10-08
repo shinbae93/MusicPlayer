@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Music player</title>
+        <link rel="shortcut icon" href="#" />
+        <link rel="stylesheet" href="./assets/css/style.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+            integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+            crossorigin="anonymous"
+        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <div class="player">
+            <!-- Dashboard -->
+            <div class="dashboard">
+                <!-- Header -->
+                <header>
+                    <h4>Now playing:</h4>
+                    <h2>String 57th & 9th</h2>
+                </header>
+
+                <!-- CD -->
+                <div class="cd">
+                    <div class="cd-thumb"></div>
+                </div>
+
+                <!-- Control -->
+                <div class="control">
+                    <div class="btn btn-repeat">
+                        <i class="fas fa-redo"></i>
+                    </div>
+                    <div class="btn btn-prev">
+                        <i class="fas fa-step-backward"></i>
+                    </div>
+                    <div class="btn btn-toggle-play">
+                        <i class="fas fa-pause icon-pause"></i>
+                        <i class="fas fa-play icon-play"></i>
+                    </div>
+                    <div class="btn btn-next">
+                        <i class="fas fa-step-forward"></i>
+                    </div>
+                    <div class="btn btn-random">
+                        <i class="fas fa-random"></i>
+                    </div>
+                </div>
+
+                <input
+                    id="progress"
+                    class="progress"
+                    type="range"
+                    value="0"
+                    step="1"
+                    min="0"
+                    max="100"
+                />
+
+                <audio id="audio" src=""></audio>
+            </div>
+
+            <!-- Playlist -->
+            <div class="playlist">
+                <div class="song">
+                    <div class="thumb"></div>
+                    <div class="body">
+                        <h3 class="title">Music name</h3>
+                        <p class="author">Singer</p>
+                    </div>
+                    <div class="option">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const $ = document.querySelector.bind(document);
+            const $$ = document.querySelectorAll.bind(document);
+
+            const heading = $("header h2");
+            const cdThumb = $(".cd-thumb");
+            const player = $(".player");
+            const audio = $("#audio");
+            const cd = $(".cd");
+            const playBtn = $(".btn-toggle-play");
+            const progress = $("#progress");
+
+            const app = {
+                currentIndex: 0,
+                isPlaying: false,
+                isPeeking: false,
+                songs: [
+                    {
+                        name: "I Want To Be A Pillow",
+                        singer: "J_ust",
+                        path: "./assets/music/IWantToBeAPillow-J_ust.mp3",
+                        image: "./assets/img/IWantToBeAPillow-J_ust.jpg",
+                    },
+                    {
+                        name: "Blueming",
+                        singer: "IU",
+                        path: "./assets/music/blueming-IU.mp3",
+                        image: "./assets/img/blueming-iu.jpg",
+                    },
+                    {
+                        name: "Through The Night",
+                        singer: "IU",
+                        path: "./assets/music/Through-the-Night-IU.mp3",
+                        image: "./assets/img/through-the-night-iu.jpg",
+                    },
+                    {
+                        name: "Four Seasons",
+                        singer: "Tae Yeon",
+                        path: "./assets/music/FourSeasons-TaeYeonSNS.mp3",
+                        image: "./assets/img/four-seasons-taeyeon.jpg",
+                    },
+                    {
+                        name: "All About You(Hotel Del Luna OST)",
+                        singer: "Tae Yeon",
+                        path: "./assets/music/AllAboutYouHotelDelLunaOst-TaeYeonSNSD.mp3",
+                        image: "./assets/img/AllAboutYou-Taeyeon.jpg",
+                    },
+                    {
+                        name: "Me After You",
+                        singer: "Paul Kim",
+                        path: "./assets/music/MeAfterYou-PaulKim.mp3",
+                        image: "./assets/img/MeAfterYou-PaulKim.jpg",
+                    },
+                    {
+                        name: "To My Youth",
+                        singer: "Bolb4",
+                        path: "./assets/music/ToMyYouth-BolBBalgan4.mp3",
+                        image: "./assets/img/ToMyYouth-Bolb4.jpg",
+                    },
+                    {
+                        name: "Flower Way",
+                        singer: "Kim Sejeong",
+                        path: "./assets/music/FlowerRoad-KimSejeong.mp3",
+                        image: "./assets/img/Flower_Way_Sejeong_pd_by_Zico.jpg",
+                    },
+                    {
+                        name: "Dễ Thay Đổi",
+                        singer: "Vương Tĩnh Văn Không Mập",
+                        path: "./assets/music/DeThayDoi-VuongTinhVanKhongMap.mp3",
+                        image: "./assets/img/DeThayDoi-VuongTinhVan.jpg",
+                    },
+                    {
+                        name: "Vây Giữ",
+                        singer: "Vương Tĩnh Văn Không Mập",
+                        path: "./assets/music/VayGiu-VuongTinhVanKhongMap.mp3",
+                        image: "./assets/img/VayGiu-VuongTinhVan.jpg",
+                    },
+                ],
+                render() {
+                    const htmls = this.songs.map(
+                        (song) => `
+                        <div class="song">
+                            <div
+                                class="thumb"
+                                style="background-image: url('${song.image}');"
+                            ></div>
+                            <div class="body">
+                                <h3 class="title">${song.name}</h3>
+                                <p class="author">${song.singer}</p>
+                            </div>
+                            <div class="option">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </div>
+                        </div>`
+                    );
+                    $(".playlist").innerHTML = htmls.join("");
+                },
+                defineProps() {
+                    Object.defineProperty(this, "currentSong", {
+                        get: function () {
+                            return this.songs[this.currentIndex];
+                        },
+                    });
+                },
+                handleEvent() {
+                    const cdWidth = cd.offsetWidth;
+
+                    document.onscroll = function () {
+                        const scrollTop =
+                            window.scrollY ||
+                            document.documentElement.scrollTop;
+                        const newcdWidth = cdWidth - scrollTop;
+                        cd.style.width = newcdWidth > 0 ? newcdWidth + "px" : 0;
+                        cd.style.opacity = newcdWidth / cdWidth;
+                    };
+
+                    playBtn.onclick = function () {
+                        if (this.isPlaying) {
+                            audio.pause();
+                        } else {
+                            audio.play();
+                        }
+                    }.bind(this);
+
+                    audio.onplay = function () {
+                        this.isPlaying = true;
+                        player.classList.add("playing");
+                    }.bind(this);
+
+                    audio.onpause = function () {
+                        this.isPlaying = false;
+                        player.classList.remove("playing");
+                    }.bind(this);
+
+                    audio.ontimeupdate = function () {
+                        if (audio.duration && !isPeeking) {
+                            this.isPeeking = false;
+                            const progressPercent = Math.floor(
+                                (audio.currentTime / audio.duration) * 100
+                            );
+                            progress.value = progressPercent;
+                        }
+                    }.bind(this);
+
+                    progress.onchange = function (e) {
+                        this.isPeeking = true;
+                        const seektime =
+                            (audio.duration * e.target.value) / 100;
+                        audio.currentTime = seektime;
+                    }.bind(this);
+                },
+                loadCurrentSong() {
+                    heading.textContent = this.currentSong.name;
+                    cdThumb.style.backgroundImage = `url("${this.currentSong.image}")`;
+                    audio.src = this.currentSong.path;
+                },
+                start() {
+                    this.defineProps();
+                    this.render();
+                    this.loadCurrentSong();
+                    this.handleEvent();
+                },
+            };
+
+            app.start();
+        </script>
+    </body>
+</html>
