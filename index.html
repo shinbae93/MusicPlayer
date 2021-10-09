@@ -64,7 +64,7 @@
                     max="100"
                 />
 
-                <audio id="audio" src=""></audio>
+                <audio id="audio" src="" loop="true"></audio>
             </div>
 
             <!-- Playlist -->
@@ -92,12 +92,18 @@
             const audio = $("#audio");
             const cd = $(".cd");
             const playBtn = $(".btn-toggle-play");
+            const prevBtn = $(".btn-prev");
+            const nextBtn = $(".btn-next");
+            const randBtn = $(".btn-random");
+            const repeatBtn = $(".btn-repeat");
             const progress = $("#progress");
 
             const app = {
                 currentIndex: 0,
                 isPlaying: false,
                 isPeeking: false,
+                isRandom: false,
+                isRepeat: false,
                 songs: [
                     {
                         name: "I Want To Be A Pillow",
@@ -189,6 +195,19 @@
                 handleEvent() {
                     const cdWidth = cd.offsetWidth;
 
+                    const cdthumbAnimation = cdThumb.animate(
+                        [
+                            {
+                                transform: "rotate(360deg)",
+                            },
+                        ],
+                        {
+                            duration: 10000,
+                            iterations: Infinity,
+                        }
+                    );
+                    cdthumbAnimation.pause();
+
                     document.onscroll = function () {
                         const scrollTop =
                             window.scrollY ||
@@ -209,15 +228,17 @@
                     audio.onplay = function () {
                         this.isPlaying = true;
                         player.classList.add("playing");
+                        cdthumbAnimation.play();
                     }.bind(this);
 
                     audio.onpause = function () {
                         this.isPlaying = false;
                         player.classList.remove("playing");
+                        cdthumbAnimation.pause();
                     }.bind(this);
 
                     audio.ontimeupdate = function () {
-                        if (audio.duration && !isPeeking) {
+                        if (audio.duration && !this.isPeeking) {
                             this.isPeeking = false;
                             const progressPercent = Math.floor(
                                 (audio.currentTime / audio.duration) * 100
@@ -226,17 +247,70 @@
                         }
                     }.bind(this);
 
+                    audio.onended = function () {}.bind(this);
+
                     progress.onchange = function (e) {
                         this.isPeeking = true;
                         const seektime =
                             (audio.duration * e.target.value) / 100;
                         audio.currentTime = seektime;
                     }.bind(this);
+
+                    nextBtn.onclick = function () {
+                        if (this.isRandom) this.randomSong();
+                        else {
+                            this.currentIndex++;
+                            if (this.currentIndex >= this.songs.length)
+                                this.currentIndex = 0;
+                            this.loadCurrentSong();
+                            audio.play();
+                        }
+                    }.bind(this);
+
+                    prevBtn.onclick = function () {
+                        if (this.isRandom) this.randomSong();
+                        else {
+                            this.currentIndex--;
+                            if (this.currentIndex < 0)
+                                this.currentIndex = this.songs.length - 1;
+                            this.loadCurrentSong();
+                            audio.play();
+                        }
+                    }.bind(this);
+
+                    randBtn.onclick = function () {
+                        if (this.isRandom) {
+                            randBtn.classList.remove("active");
+                            this.isRandom = false;
+                        } else {
+                            randBtn.classList.add("active");
+                            this.isRandom = true;
+                        }
+                    }.bind(this);
+
+                    repeatBtn.onclick = function () {
+                        if (this.isRepeat) {
+                            repeatBtn.classList.remove("active");
+                            this.isRepeat = false;
+                        } else {
+                            repeatBtn.classList.add("active");
+                            this.isRepeat = true;
+                        }
+                    }.bind(this);
                 },
                 loadCurrentSong() {
                     heading.textContent = this.currentSong.name;
                     cdThumb.style.backgroundImage = `url("${this.currentSong.image}")`;
                     audio.src = this.currentSong.path;
+                },
+                randomSong() {
+                    let newIndex;
+                    do {
+                        newIndex = Math.floor(
+                            Math.random() * this.songs.length
+                        );
+                    } while (this.currentIndex === newIndex);
+                    this.currentIndex = newIndex;
                 },
                 start() {
                     this.defineProps();
