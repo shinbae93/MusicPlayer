@@ -145,19 +145,20 @@ header h2 {
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
 }
 
-.song.active {
-    background-color: var(--primary-color);
+.song.active .author,
+.song.active .title {
+    color: var(--primary-color);
 }
 
 .song:active {
     opacity: 0.8;
 }
 
-.song.active .option,
+/* .song.active .option,
 .song.active .author,
 .song.active .title {
     color: #fff;
-}
+} */
 
 .song .thumb {
     width: 44px;

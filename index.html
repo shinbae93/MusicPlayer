@@ -64,22 +64,11 @@
                     max="100"
                 />
 
-                <audio id="audio" src="" loop="true"></audio>
+                <audio id="audio" src=""></audio>
             </div>
 
             <!-- Playlist -->
-            <div class="playlist">
-                <div class="song">
-                    <div class="thumb"></div>
-                    <div class="body">
-                        <h3 class="title">Music name</h3>
-                        <p class="author">Singer</p>
-                    </div>
-                    <div class="option">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </div>
-                </div>
-            </div>
+            <div class="playlist"></div>
         </div>
 
         <script>
@@ -89,6 +78,7 @@
             const heading = $("header h2");
             const cdThumb = $(".cd-thumb");
             const player = $(".player");
+            const playlist = $(".playlist");
             const audio = $("#audio");
             const cd = $(".cd");
             const playBtn = $(".btn-toggle-play");
@@ -97,6 +87,7 @@
             const randBtn = $(".btn-random");
             const repeatBtn = $(".btn-repeat");
             const progress = $("#progress");
+            const cdWidth = cd.offsetWidth;
 
             const app = {
                 currentIndex: 0,
@@ -165,11 +156,24 @@
                         path: "./assets/music/VayGiu-VuongTinhVanKhongMap.mp3",
                         image: "./assets/img/VayGiu-VuongTinhVan.jpg",
                     },
+                    {
+                        name: "Như Cố",
+                        singer: "Trương Bích Thần",
+                        path: "./assets/music/NhuCoChauSinhNhuCoOst-TruongBichThan.mp3",
+                        image: "./assets/img/NhuCo-TruongBichThan.jpg",
+                    },
+                    {
+                        name: "Vô Ngu",
+                        singer: "Lý Tử Đình, Tỉnh Lung",
+                        path: "./assets/music/VoNguChauSinhNhuCoOst-LyTuDinhTinhLung.mp3",
+                        image: "./assets/img/VoNgu-ChauSinhNhuCoOST.jpg",
+                    },
                 ],
+                // render playlist
                 render() {
                     const htmls = this.songs.map(
-                        (song) => `
-                        <div class="song">
+                        (song, index) => `
+                        <div class="song" data-index="${index}">
                             <div
                                 class="thumb"
                                 style="background-image: url('${song.image}');"
@@ -183,8 +187,9 @@
                             </div>
                         </div>`
                     );
-                    $(".playlist").innerHTML = htmls.join("");
+                    playlist.innerHTML = htmls.join("");
                 },
+                // define property: current song
                 defineProps() {
                     Object.defineProperty(this, "currentSong", {
                         get: function () {
@@ -193,8 +198,7 @@
                     });
                 },
                 handleEvent() {
-                    const cdWidth = cd.offsetWidth;
-
+                    // cd thumb rotate
                     const cdthumbAnimation = cdThumb.animate(
                         [
                             {
@@ -208,6 +212,7 @@
                     );
                     cdthumbAnimation.pause();
 
+                    // scroll
                     document.onscroll = function () {
                         const scrollTop =
                             window.scrollY ||
@@ -217,6 +222,7 @@
                         cd.style.opacity = newcdWidth / cdWidth;
                     };
 
+                    // play button
                     playBtn.onclick = function () {
                         if (this.isPlaying) {
                             audio.pause();
@@ -225,18 +231,21 @@
                         }
                     }.bind(this);
 
+                    // playing
                     audio.onplay = function () {
                         this.isPlaying = true;
                         player.classList.add("playing");
                         cdthumbAnimation.play();
                     }.bind(this);
 
+                    // pausing
                     audio.onpause = function () {
                         this.isPlaying = false;
                         player.classList.remove("playing");
                         cdthumbAnimation.pause();
                     }.bind(this);
 
+                    // progress bar
                     audio.ontimeupdate = function () {
                         if (audio.duration && !this.isPeeking) {
                             this.isPeeking = false;
@@ -247,18 +256,30 @@
                         }
                     }.bind(this);
 
-                    audio.onended = function () {}.bind(this);
+                    // song ended
+                    audio.onended = function () {
+                        nextBtn.click();
+                    };
 
+                    // peeking progress bar
                     progress.onchange = function (e) {
                         this.isPeeking = true;
                         const seektime =
                             (audio.duration * e.target.value) / 100;
                         audio.currentTime = seektime;
+                        this.isPeeking = false;
                     }.bind(this);
 
+                    // next button
                     nextBtn.onclick = function () {
-                        if (this.isRandom) this.randomSong();
-                        else {
+                        if (this.isRepeat) {
+                            audio.currentTime = 0;
+                            audio.play();
+                        } else if (this.isRandom) {
+                            this.randomSong();
+                            this.loadCurrentSong();
+                            audio.play();
+                        } else {
                             this.currentIndex++;
                             if (this.currentIndex >= this.songs.length)
                                 this.currentIndex = 0;
@@ -267,9 +288,16 @@
                         }
                     }.bind(this);
 
+                    // previous button
                     prevBtn.onclick = function () {
-                        if (this.isRandom) this.randomSong();
-                        else {
+                        if (this.isRepeat) {
+                            audio.currentTime = 0;
+                            audio.play();
+                        } else if (this.isRandom) {
+                            this.randomSong();
+                            this.loadCurrentSong();
+                            audio.play();
+                        } else {
                             this.currentIndex--;
                             if (this.currentIndex < 0)
                                 this.currentIndex = this.songs.length - 1;
@@ -278,6 +306,7 @@
                         }
                     }.bind(this);
 
+                    // random button
                     randBtn.onclick = function () {
                         if (this.isRandom) {
                             randBtn.classList.remove("active");
@@ -288,6 +317,7 @@
                         }
                     }.bind(this);
 
+                    // repeat button
                     repeatBtn.onclick = function () {
                         if (this.isRepeat) {
                             repeatBtn.classList.remove("active");
@@ -297,20 +327,45 @@
                             this.isRepeat = true;
                         }
                     }.bind(this);
+
+                    // click song to play
+                    playlist.onclick = function (e) {
+                        const song = e.target.closest(".song");
+                        if (song) {
+                            if (e.target.closest(".option")) {
+                                console.log("asdfds");
+                            } else {
+                                console.log(song.dataset.index);
+                                this.currentIndex = song.dataset.index;
+                                this.loadCurrentSong();
+                                audio.play();
+                            }
+                        }
+                    }.bind(this);
                 },
                 loadCurrentSong() {
                     heading.textContent = this.currentSong.name;
                     cdThumb.style.backgroundImage = `url("${this.currentSong.image}")`;
                     audio.src = this.currentSong.path;
+                    if ($(".song.active"))
+                        $(".song.active").classList.remove("active");
+                    $$(".song")[this.currentIndex].classList.add("active");
+                    this.scrollToCurrent();
                 },
                 randomSong() {
-                    let newIndex;
+                    var newIndex;
                     do {
                         newIndex = Math.floor(
                             Math.random() * this.songs.length
                         );
                     } while (this.currentIndex === newIndex);
                     this.currentIndex = newIndex;
+                },
+                scrollToCurrent() {
+                    $(".song.active").scrollIntoView({
+                        behavior: "smooth",
+                        block: "end",
+                    });
                 },
                 start() {
                     this.defineProps();
