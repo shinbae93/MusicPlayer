@@ -252,7 +252,6 @@
                             const progressPercent =
                                 (audio.currentTime / audio.duration) * 100;
                             progress.value = progressPercent;
-                            console.log(progress.value);
                         }
                     }.bind(this);
 
@@ -332,10 +331,7 @@
                     playlist.onclick = function (e) {
                         const song = e.target.closest(".song");
                         if (song) {
-                            if (e.target.closest(".option")) {
-                                console.log("asdfds");
-                            } else {
-                                console.log(song.dataset.index);
+                            if (!e.target.closest(".option")) {
                                 this.currentIndex = song.dataset.index;
                                 this.loadCurrentSong();
                                 audio.play();
